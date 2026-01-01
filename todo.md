@@ -30,4 +30,4 @@
 - [x] 使用说明
 
 ## GitHub
-- [ ] 代码推送到 GitHub 仓库
+- [x] 代码推送到 GitHub 仓库
