@@ -1,7 +1,56 @@
 version: '3.8'
 
 services:
-  # Main Application
+  # Spring Boot Backend (Java)
+  spring-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: spring-ai-chat-spring-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DATABASE_URL=jdbc:mysql://mysql:3306/spring_ai_chat?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - DATABASE_USERNAME=root
+      - DATABASE_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpassword}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY:-}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DEFAULT_AI_PROVIDER=${DEFAULT_AI_PROVIDER:-openai}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    profiles:
+      - spring
+
+  # Vue Frontend (connects to Spring Boot backend)
+  vue-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: spring-ai-chat-vue-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - spring-backend
+    networks:
+      - app-network
+    profiles:
+      - spring
+
+  # Node.js Application (Original - for Manus platform)
   app:
     build:
       context: .

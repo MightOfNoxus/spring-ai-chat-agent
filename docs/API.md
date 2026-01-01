@@ -2,7 +2,137 @@
 
 本文档详细描述了 Spring AI Chat Agent 的所有 API 接口。
 
-## 概述
+项目提供两套 API：
+1. **Spring Boot REST API** - Java 技术栈，通过 `/api/*` 端点访问
+2. **tRPC API** - Node.js 技术栈，通过 `/api/trpc` 端点访问
+
+---
+
+## Spring Boot REST API
+
+### 基础信息
+
+- **Base URL**: `http://localhost:8080/api`
+- **认证方式**: 通过 `X-User-Id` 请求头传递用户 ID
+- **内容类型**: `application/json`
+
+### 会话管理
+
+#### 创建会话
+
+```http
+POST /api/chat/sessions
+Content-Type: application/json
+X-User-Id: 1
+
+{
+  "title": "新对话",
+  "modelProvider": "openai",
+  "modelName": "gpt-4",
+  "systemPrompt": "你是一个有帮助的AI助手",
+  "contextWindowSize": 10
+}
+```
+
+**响应示例：**
+
+```json
+{
+  "id": 1,
+  "title": "新对话",
+  "modelProvider": "openai",
+  "modelName": "gpt-4",
+  "isActive": true,
+  "createdAt": "2024-01-15T10:30:00",
+  "updatedAt": "2024-01-15T10:30:00"
+}
+```
+
+#### 获取会话列表
+
+```http
+GET /api/chat/sessions
+X-User-Id: 1
+```
+
+#### 获取会话详情（含消息）
+
+```http
+GET /api/chat/sessions/{sessionId}
+X-User-Id: 1
+```
+
+#### 删除会话
+
+```http
+DELETE /api/chat/sessions/{sessionId}
+X-User-Id: 1
+```
+
+### 消息发送
+
+#### 发送消息（非流式）
+
+```http
+POST /api/chat/messages
+Content-Type: application/json
+X-User-Id: 1
+
+{
+  "sessionId": 1,
+  "message": "你好，请介绍一下自己"
+}
+```
+
+#### 发送消息（流式 SSE）
+
+```http
+POST /api/chat/messages/stream
+Content-Type: application/json
+Accept: text/event-stream
+X-User-Id: 1
+
+{
+  "sessionId": 1,
+  "message": "你好"
+}
+```
+
+### 记忆管理
+
+#### 获取记忆列表
+
+```http
+GET /api/memory?limit=50
+X-User-Id: 1
+```
+
+#### 存储记忆
+
+```http
+POST /api/memory
+Content-Type: application/json
+X-User-Id: 1
+
+{
+  "content": "用户喜欢编程",
+  "summary": "编程爱好",
+  "importance": 0.8
+}
+```
+
+#### 搜索记忆
+
+```http
+GET /api/memory/search?query=编程&topK=5
+X-User-Id: 1
+```
+
+---
+
+## tRPC API (Node.js 版本)
+
+### 概述
 
 本项目使用 tRPC 作为 API 框架，所有接口通过 `/api/trpc` 端点访问。tRPC 提供端到端的类型安全，前端可以直接使用 TypeScript 类型。
 
